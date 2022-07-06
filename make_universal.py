@@ -15,13 +15,13 @@ def create_universal_binary(x86_path, arm_path, universal_path):
 
     with os.popen(f"otool -L {arm_path}") as p:
         query_out = p.readlines()
-    execute(f"install_name_tool {universal_path} -id {universal_path}")
+    execute(f"install_name_tool {universal_path} -id @loader_path/../lib/{os.path.basename(universal_path)}")
     for line in query_out:
         line = line.strip().split(" ")[0]
         if "install_arm64" in line:
             execute(
                 f"install_name_tool {universal_path} "
-                f"-change {line} {line.replace('install_arm64', 'install_universal')}"
+                f"-change {line} @loader_path/../lib/{os.path.basename(line)}"
             )
 
     with os.popen(f"otool -L {x86_path}") as p:
@@ -31,7 +31,7 @@ def create_universal_binary(x86_path, arm_path, universal_path):
         if "install_x86_64" in line:
             execute(
                 f"install_name_tool {universal_path} "
-                f"-change {line} {line.replace('install_x86_64', 'install_universal')}"
+                f"-change {line} @loader_path/../lib/{os.path.basename(line)}"
             )
 
 
@@ -61,5 +61,8 @@ if __name__ == "__main__":
                 os.symlink(real.name, target)
             elif target.suffix in {'.dylib', '.a'} or len(target.suffix) == 0 and os.access(f, os.X_OK):
                 create_universal_binary(install_intel_dir / relative, install_apple_dir / relative, target)
+            elif target.suffix in {'.pc'} or len(target.suffix) == 0 and os.access(f, os.X_OK):
+                content = open(f,"r").read().replace('install_arm64', 'install_universal')
+                open(target, "w").write(content)
             else:
                 shutil.copy2(f, target, follow_symlinks=False)

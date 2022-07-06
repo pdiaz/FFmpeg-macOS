@@ -29,7 +29,7 @@ if __name__ == "__main__":
         n_cpu = cpu_count()
         print("Configure project.")
         execute(
-            f"cd {ffmpeg_dir} && ./configure --enable-cross-compile --prefix={target_dir / ('install_' + arch + '/')} "
+            f"cd {ffmpeg_dir} && ./configure --enable-cross-compile --disable-sdl2 --disable-xlib --disable-libxcb --prefix={target_dir / ('install_' + arch + '/')} "
             f"--enable-shared --disable-static --arch={arch} --cc='clang -arch {arch}'"
         )
         print(f"Make project ({n_cpu} threads).")
